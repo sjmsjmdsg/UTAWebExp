@@ -34,6 +34,7 @@ from browser_env.actions import is_equivalent
 from browser_env.helper_functions import (
     RenderHelper,
     get_action_description,
+    get_accessed_url_history,
 )
 from evaluation_harness import image_utils
 
@@ -219,32 +220,32 @@ def early_stop(
             return True, f"Failed to parse actions for {k} times"
 
     # Case: same action for k times
-    k = thresholds["repeating_action"]
-    last_k_actions = trajectory[1::2][-k:]  # type: ignore[assignment]
-    action_seq = trajectory[1::2]  # type: ignore[assignment]
-
-    if len(action_seq) == 0:
-        return False, ""
-
-    last_action: Action = action_seq[-1]
-
-    if last_action["action_type"] != ActionTypes.TYPE:
-        if len(last_k_actions) >= k:
-            if all(
-                [
-                    is_equivalent(action, last_action)
-                    for action in last_k_actions
-                ]
-            ):
-                return True, f"Same action for {k} times"
-
-    else:
-        # check the action sequence
-        if (
-            sum([is_equivalent(action, last_action) for action in action_seq])
-            >= k
-        ):
-            return True, f"Same typing action for {k} times"
+    # k = thresholds["repeating_action"]
+    # last_k_actions = trajectory[1::2][-k:]  # type: ignore[assignment]
+    # action_seq = trajectory[1::2]  # type: ignore[assignment]
+    #
+    # if len(action_seq) == 0:
+    #     return False, ""
+    #
+    # last_action: Action = action_seq[-1]
+    #
+    # if last_action["action_type"] != ActionTypes.TYPE:
+    #     if len(last_k_actions) >= k:
+    #         if all(
+    #             [
+    #                 is_equivalent(action, last_action)
+    #                 for action in last_k_actions
+    #             ]
+    #         ):
+    #             return True, f"Same action for {k} times"
+    #
+    # else:
+    #     # check the action sequence
+    #     if (
+    #         sum([is_equivalent(action, last_action) for action in action_seq])
+    #         >= k
+    #     ):
+    #         return True, f"Same typing action for {k} times"
 
     return False, ""
 
@@ -324,7 +325,8 @@ def test(
         state_info: StateInfo = {"observation": obs, "info": info}
         trajectory.append(state_info)
 
-        meta_data = {"action_history": ["None"]}  # meta_data here is history
+        meta_data = {"action_history": ["None"], "previous_accessed_urls": []}  # meta_data here is history
+        previous_url = info['page'].url
         while True:
             early_stop_flag, stop_info = early_stop(
                 trajectory, max_steps, early_stop_thresholds
@@ -368,6 +370,12 @@ def test(
             obs, _, terminated, _, info = env.step(action)
             state_info = {"observation": obs, "info": info}
             trajectory.append(state_info)
+
+            current_url = info['page'].url
+            accessed_url_history = get_accessed_url_history(previous_url, action_str, current_url)
+            previous_url = current_url
+            if len(accessed_url_history) > 0:
+                meta_data["previous_accessed_urls"].append(accessed_url_history)
 
             if terminated:
                 # add a action place holder

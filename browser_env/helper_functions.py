@@ -3,7 +3,7 @@ import io
 import json
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Tuple
 
 from PIL import Image
 
@@ -74,6 +74,20 @@ def get_render_action(
                 f"Unknown action type {action['action_type'], action_set_tag}"
             )
     return action_str
+
+
+def get_accessed_url_history(
+        previous_url: str,
+        action_str: str,
+        current_url: str,
+) -> Tuple:
+    """
+
+    """
+    if previous_url != current_url:
+        return previous_url, action_str, current_url
+    else:
+        return ()
 
 
 def get_action_description(

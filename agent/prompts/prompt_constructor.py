@@ -307,11 +307,13 @@ class MultimodalCoTPromptConstructor(CoTPromptConstructor):
         page = state_info["info"]["page"]
         url = page.url
         previous_action_str = meta_data["action_history"][-1]
+        previous_accessed_urls = str(meta_data["previous_accessed_urls"])
         current = template.format(
             objective=intent,
-            url=self.map_url_to_real(url),
+            url=url,
             observation=obs,
             previous_action=previous_action_str,
+            previous_accessed_urls=previous_accessed_urls,
         )
 
         assert all([f"{{k}}" not in current for k in keywords])
