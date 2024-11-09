@@ -145,6 +145,12 @@ class PromptConstructor(object):
         response = self.map_url_to_local(response)
         return response
 
+    def construct_for_content(self,
+        trajectory: Trajectory,
+        page_screenshot_img: Image.Image,
+    ) -> APIInput:
+        raise NotImplementedError
+
 
 class DirectPromptConstructor(PromptConstructor):
     """The agent will direct predict the action"""
@@ -320,6 +326,40 @@ class MultimodalCoTPromptConstructor(CoTPromptConstructor):
 
         prompt = self.get_lm_api_input(
             intro, examples, current, page_screenshot_img, images
+        )
+        return prompt
+
+    def construct_for_content(
+        self,
+        trajectory: Trajectory,
+        page_screenshot_img: Image.Image,
+    ) -> APIInput:
+        intro = self.instruction["intro"]
+        examples = self.instruction["examples"]
+        template = self.instruction["template"]
+        keywords = self.instruction["meta_data"]["keywords"]
+        state_info: StateInfo = trajectory[-1]  # type: ignore[assignment]
+
+        obs = state_info["observation"][self.obs_modality]
+        max_obs_length = self.lm_config.gen_config["max_obs_length"]
+        if max_obs_length:
+            if self.lm_config.provider == "google":
+                print("NOTE: This is a Gemini model, so we use characters instead of tokens for max_obs_length.")
+                obs = obs[:max_obs_length]
+            else:
+                obs = self.tokenizer.decode(self.tokenizer.encode(obs)[:max_obs_length])  # type: ignore[arg-type]
+
+        page = state_info["info"]["page"]
+        url = page.url
+        current = template.format(
+            url=url,
+            observation=obs,
+        )
+
+        assert all([f"{{k}}" not in current for k in keywords])
+
+        prompt = self.get_lm_api_input(
+            intro, examples, current, page_screenshot_img, []
         )
         return prompt
 

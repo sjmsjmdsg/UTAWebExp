@@ -1,8 +1,10 @@
 import argparse
 import json
-from typing import Any, Optional
+import os
+from typing import Any, Optional, Tuple
 
 import tiktoken
+import copy
 from beartype import beartype
 from PIL import Image
 
@@ -42,6 +44,11 @@ class Agent:
         self,
         test_config_file: str,
     ) -> None:
+        raise NotImplementedError
+
+    def extract_content(
+            self, trajectory: Trajectory, output_response: bool = False
+    ) -> str:
         raise NotImplementedError
 
 
@@ -125,8 +132,30 @@ class PromptAgent(Agent):
         self.action_set_tag = tag
 
     @beartype
+    def extract_content(
+        self, trajectory: Trajectory, output_response: bool = False
+    ) -> str:
+        # Create page screenshot image for multimodal models.
+        page_screenshot_arr = trajectory[-1]["observation"]["image"]
+        page_screenshot_img = Image.fromarray(
+            page_screenshot_arr
+        )  # size = (viewport_width, viewport_width)
+
+        prompt = self.prompt_constructor.construct_for_content(
+            trajectory, page_screenshot_img
+        )
+
+        lm_config = self.lm_config
+        response = call_llm(lm_config, prompt)
+        if output_response:
+            print(f'Agent: {response}', flush=True)
+
+        return response
+
+
+    @beartype
     def next_action(
-        self, trajectory: Trajectory, intent: str, meta_data: dict[str, Any], images: Optional[list[Image.Image]] = None,
+        self, trajectory: Trajectory, intent: str, meta_data: dict[str, Any], images: Optional[list[Image.Image]] = (),
         output_response: bool = False
     ) -> Action:
         # Create page screenshot image for multimodal models.
@@ -225,3 +254,15 @@ def construct_agent(args: argparse.Namespace, captioning_fn=None) -> Agent:
             f"agent type {args.agent_type} not implemented"
         )
     return agent
+
+
+def construct_multi_agents(args: argparse.Namespace, captioning_fn=None) -> Tuple[Agent, Agent]:
+    # ini action agent
+    action_agent = construct_agent(args, captioning_fn)
+
+    # ini content agent
+    copy_args = copy.deepcopy(args)
+    copy_args.instruction_path = f"{os.path.splitext(copy_args.instruction_path)[0]}_content.json"
+    content_agent = construct_agent(copy_args, captioning_fn)
+
+    return action_agent, content_agent

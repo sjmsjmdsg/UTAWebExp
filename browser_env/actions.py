@@ -109,6 +109,7 @@ class Action(TypedDict):
     pw_code: str
     answer: str
     raw_prediction: str  # raw prediction from the model
+    raw_content: str  # raw web page content
 
 
 @beartype

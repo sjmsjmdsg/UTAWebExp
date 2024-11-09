@@ -20,6 +20,7 @@ from PIL import Image
 from agent import (
     PromptAgent,
     construct_agent,
+    construct_multi_agents,
 )
 from agent.prompts import *
 from browser_env import (
@@ -266,7 +267,7 @@ def test(
     caption_image_fn = None  # Don't use captioning for the demo, due to extra resources required to run BLIP-2.
 
 
-    agent = construct_agent(
+    agent, content_agent = construct_multi_agents(
         args,
         captioning_fn=caption_image_fn
         if args.observation_type == "accessibility_tree_with_captioner"
@@ -319,7 +320,7 @@ def test(
         logger.info(f"[Config file]: {config_file}")
         logger.info(f"[Intent]: {intent}")
 
-        agent.reset(config_file)
+        agent.reset(config_file)  # not implemented
         trajectory: Trajectory = []
         obs, info = env.reset(options={"config_file": config_file})
         state_info: StateInfo = {"observation": obs, "info": info}
@@ -345,9 +346,17 @@ def test(
                         meta_data=meta_data,
                         output_response=True
                     )
+
+                    content = content_agent.extract_content(
+                        trajectory,
+                        output_response=True
+                    )
+                    action["raw_content"] = content
                 except ValueError as e:
                     # get the error message
                     action = create_stop_action(f"ERROR: {str(e)}")
+                    content = "None"
+                    action["raw_content"] = content
 
             trajectory.append(action)
 

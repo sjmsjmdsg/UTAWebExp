@@ -33,13 +33,11 @@ Completion Action:
 ```stop [answer]```: Issue this action when you believe the task is complete. If the objective is to find a text-based answer, provide the answer in the bracket.
 
 To be successful, it is very important to follow the following rules:
-1. You should provide description summarizing the content and functionality of current webpage.
-2. Generate the description in the correct format. Start with a "In summary, the web page shows" phrase, followed by summarization inside @@@@@@.
-3. Then, you should only issue an action that is valid given the current observation
-4. You should only issue one action at a time.
-5. You should follow the examples to reason step by step and then issue the next action.
-6. Generate the action in the correct format. Start with a "In summary, the next action I will perform is" phrase, followed by action inside ``````. For example, "In summary, the next action I will perform is ```click [1234]```".
-7. Issue stop action when you think you have achieved the objective. Don't generate anything after stop.""",
+1. You should only issue an action that is valid given the current observation
+2. You should only issue one action at a time.
+3. You should follow the examples to reason step by step and then issue the next action.
+4. Generate the action in the correct format. Start with a "In summary, the next action I will perform is" phrase, followed by action inside ``````. For example, "In summary, the next action I will perform is ```click [1234]```".
+5. Issue stop action when you think you have achieved the objective. Don't generate anything after stop.""",
 	"examples": [
 		(
 			"""OBSERVATION:
@@ -52,9 +50,8 @@ To be successful, it is very important to follow the following rules:
 URL: http://onestopmarket.com/office-products/office-electronics.html
 OBJECTIVE: What is the price of HP Inkjet Fax Machine?
 PREVIOUS ACTION: None
-PREVIOUS ACCESSED URLS: None""",
-			"Let's think step-by-step. In summary, the web page shows @@@search results for \"HP Inkjet\" products, showcasing various HP inkjet devices like printers and fax machines. It features product images, names, prices, ratings, and an \"Add to Cart\" button for quick purchasing. Users can filter products by category on the left sidebar, sort by relevance, and view items in either a grid or list format.@@@ "
-			"This page list the information of HP Inkjet Fax Machine, which is the product identified in the objective. Its price is $279.49. I think I have achieved the objective. I will issue the stop action with the answer. In summary, the next action I will perform is ```stop [$279.49]```",
+PREVIOUS ACCESSED URLS: []""",
+			"Let's think step-by-step. This page list the information of HP Inkjet Fax Machine, which is the product identified in the objective. Its price is $279.49. I think I have achieved the objective. I will issue the stop action with the answer. In summary, the next action I will perform is ```stop [$279.49]```",
             "agent/prompts/som_examples/som_example1.png"
 		),
 		(
@@ -73,9 +70,8 @@ PREVIOUS ACCESSED URLS: None""",
 URL: http://reddit.com
 OBJECTIVE: Tell me what the top comment on the croissant post says.
 PREVIOUS ACTION: None
-PREVIOUS ACCESSED URLS: None""",
-			"Let's think step-by-step. In summary, the web page shows @@@a food-focused forum with user-submitted posts, each featuring an image, title, username, submission age, and comment count. A user can upvote or downvote posts, view and sort submissions by popularity or recency, and click on posts to read comments and engage in discussions. A sidebar offers information about the forum and access to moderation tools.@@@ "
-			"This page has a post titled '[I ate] Maple Pecan Croissant', which is the post mentioned in the objective. In order to find the top comment, I will navigate into the comments section of the post. In summary, the next action I will perform is ```click [11]```",
+PREVIOUS ACCESSED URLS: []""",
+			"Let's think step-by-step. This page has a post titled '[I ate] Maple Pecan Croissant', which is the post mentioned in the objective. In order to find the top comment, I will navigate into the comments section of the post. In summary, the next action I will perform is ```click [11]```",
 			"agent/prompts/som_examples/som_example2.png"
 		),
 		(
@@ -96,9 +92,8 @@ PREVIOUS ACCESSED URLS: None""",
 URL: http://classifieds.com
 OBJECTIVE: Help me find the cheapest dark colored guitar.
 PREVIOUS ACTION: None
-PREVIOUS ACCESSED URLS: None""",
-			"Let's think step-by-step. In summary, the web page shows @@@a classifieds platform where users can search for items by keyword and category. A user can browse through the latest listings, which include item images, titles, and prices, or post their own ads by selecting \"Publish Ad.\" Options to log in or register are available for account management.@@@ "
-			"The objective is to find the cheapest dark colored guitar on the site. The site has a search box whose ID is [5]. I can search for guitars by entering \"guitar\". I can submit this by pressing the Enter afterwards. In summary, the next action I will perform is ```type [5] [guitar] [1]```",
+PREVIOUS ACCESSED URLS: []""",
+			"Let's think step-by-step. The objective is to find the cheapest dark colored guitar on the site. The site has a search box whose ID is [5]. I can search for guitars by entering \"guitar\". I can submit this by pressing the Enter afterwards. In summary, the next action I will perform is ```type [5] [guitar] [1]```",
             "agent/prompts/som_examples/som_example3.png"
 		),
 	],
@@ -112,8 +107,6 @@ PREVIOUS ACCESSED URLS: {previous_accessed_urls}""",
 		"action_type": "som",
 		"keywords": ["url", "objective", "observation", "previous_action", "previous_accessed_urls"],
 		"prompt_constructor": "MultimodalCoTPromptConstructor",
-		"answer_phrase_summary": "In summary, the web page shows",
-		"summary_splitter": "@@@",
 		"answer_phrase": "In summary, the next action I will perform is",
 		"action_splitter": "```"
 	},
